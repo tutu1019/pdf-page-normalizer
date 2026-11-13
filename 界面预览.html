@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PDF 页面统一工具 · 免费本地版</title>
+<style>
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: #3e2826;
+  background: #f1d9d2;
+  accent-color: #8d483e;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: clamp(28px, 7vh, 76px) 20px 32px;
+  background:
+    radial-gradient(ellipse at 8% 5%, #fff6eb 0, transparent 54%),
+    radial-gradient(ellipse at 95% 20%, #ecc5bc 0, transparent 57%),
+    linear-gradient(135deg, #f2d5cd, #f9eeea 75%);
+}
+main { position: relative; max-width: 740px; margin: auto; }
+.ambient {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.orb {
+  position: absolute;
+  top: -9rem;
+  left: 46%;
+  width: clamp(24rem, 62vw, 52rem);
+  aspect-ratio: 1;
+  border-radius: 46% 54% 61% 39%;
+  background:
+    radial-gradient(ellipse at 32% 31%, #fff1e5 0, transparent 52%),
+    radial-gradient(ellipse at 65% 49%, #d4988c 0, transparent 62%),
+    radial-gradient(ellipse at 40% 67%, #e6aaa3 0, transparent 65%);
+  opacity: .52;
+  filter: blur(42px);
+  animation: orb-drift 19s ease-in-out infinite alternate;
+}
+@keyframes orb-drift {
+  from { transform: translate(-8%, 0) rotate(-18deg) scale(.94); }
+  to { transform: translate(12%, 18%) rotate(24deg) scale(1.13); }
+}
+h1 span { display: inline-block; animation: title-pop .52s both; }
+h1 span + span { animation-delay: .08s; }
+@keyframes title-pop {
+  0% { opacity: 0; transform: translateY(5px) scale(.93); }
+  74% { opacity: 1; transform: scale(1.018); }
+  100% { transform: scale(1); }
+}
+h1 { margin: 0 0 8px; font-size: clamp(30px, 5vw, 44px); letter-spacing: -.04em; font-weight: 650; }
+p { margin: 0 0 26px; line-height: 1.6; color: #674944; }
+.panel {
+  padding: clamp(18px, 4vw, 32px);
+  border: 1px solid #fff9;
+  border-radius: 28px;
+  background: #fff7f2e8;
+  box-shadow: inset 0 1px 0 #fff9, 0 20px 60px #6e33241e;
+}
+@supports (backdrop-filter: blur(24px)) or (-webkit-backdrop-filter: blur(24px)) {
+  .panel {
+    background: linear-gradient(145deg, #fffaf6b8, #fff5f18c);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+}
+h2 { font-size: 16px; margin: 0 0 12px; }
+small, .tip { color: #694c47; }
+.drop {
+  display: block;
+  border: 1px dashed #aa746a;
+  border-radius: 18px;
+  padding: 24px 16px;
+  text-align: center;
+  background: #fffbf869;
+  cursor: pointer;
+}
+.drop:hover, .drop.hover, .drop:focus-within { border-color: #8d483e; background: #fff8f3df; }
+.drop .tip { margin-top: 5px; }
+input[type=file] { width: 100%; max-width: 270px; margin-top: 13px; color: inherit; font: inherit; font-size: 13px; }
+input::file-selector-button, select {
+  border: 1px solid #a6746966;
+  border-radius: 9px;
+  padding: 8px 11px;
+  background: #fff8f3;
+  color: #563630;
+  font: inherit;
+  cursor: pointer;
+}
+.options { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 10px;
+  border: 1px solid #ad796b55;
+  border-radius: 14px;
+  background: #fffaf674;
+  font-size: 14px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.option:hover { background: #fff9f5; }
+.option:has(input:checked) { border-color: #a4675c; background: #f5d9d1; }
+.choice-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid #a4675c;
+  border-radius: 14px;
+  background: #f5d9d1;
+  pointer-events: none;
+}
+.options.has-highlight .option { background: transparent; }
+.options.has-highlight .option:hover:not(:has(input:checked)) { background: #fff9f57a; }
+.options.has-highlight .option:has(input:checked) { border-color: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .orb, h1 span { animation: none; }
+}
+input[type=radio] { margin: 4px 0 0; }
+.row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 14px; }
+button {
+  border: 1px solid #783b32;
+  border-radius: 13px;
+  padding: 12px 20px;
+  background: linear-gradient(#a55c4f, #864238);
+  box-shadow: inset 0 1px 0 #fff3, 0 4px 12px #773a3029;
+  color: white;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: #783b32; }
+button:disabled { opacity: .65; cursor: wait; }
+:focus-visible { outline: 2px solid #803e35; outline-offset: 3px; }
+.status { margin-top: 14px; font-size: 14px; white-space: pre-wrap; line-height: 1.6; }
+.status:empty { display: none; }
+#selection { overflow-wrap: anywhere; font-size: 13px; }
+.success { color: #205c42; }
+.error { color: #962c30; }
+.foot { font-size: 12px; line-height: 1.65; color: #694c47; margin: 16px 4px 0; }
+@media (max-width: 570px) { .options { grid-template-columns: 1fr; } }
+</style></head>
+<body><div class="ambient" aria-hidden="true"><div class="orb"></div></div><main>
+<h1><span>PDF</span> <span>页面统一工具</span></h1>
+<p>把 PDF 页面统一为 A4，保持内容比例。</p>
+<div class="panel">
+<h2>选择 PDF</h2>
+<label class="drop" id="drop"><strong>拖入 PDF 文件到这里</strong><div class="tip">或点击下方选择文件（最多 30 个）</div>
+<input id="files" type="file" accept=".pdf,application/pdf" multiple></label>
+<div id="selection" class="tip" style="margin-top:9px">尚未选择文件</div>
+<h2 style="margin-top:25px">页面尺寸</h2>
+<div class="options">
+<div class="choice-highlight" aria-hidden="true" hidden></div>
+<label class="option"><input type="radio" name="mode" value="portrait" checked><span><strong>全部 A4 竖版</strong><br><small>210 × 297 mm</small></span></label>
+<label class="option"><input type="radio" name="mode" value="landscape"><span><strong>全部 A4 横版</strong><br><small>297 × 210 mm</small></span></label>
+<label class="option"><input type="radio" name="mode" value="preserve"><span><strong>按原方向转为 A4</strong><br><small>横竖混排时仍有两种宽高</small></span></label>
+</div>
+<div class="row" style="margin-top:22px"><label for="margin"><strong>页面留白：</strong></label><select id="margin"><option value="0">0 mm</option><option value="5" selected>5 mm（推荐）</option><option value="10">10 mm</option><option value="15">15 mm</option></select></div>
+<div class="row" style="margin-top:24px"><button type="button" id="go">开始处理并下载</button><span class="tip">原文件会保留</span></div>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+</div>
+<div class="foot">界面预览 · 可试选文件和切换尺寸。实际导出请通过启动脚本打开。<br>处理含交互表单、电子签章或特殊注释的 PDF 时，请检查输出文件。</div>
+</main>
+<script>
+const TOKEN = null;
+const fileInput = document.getElementById('files');
+const selection = document.getElementById('selection');
+const status = document.getElementById('status');
+const go = document.getElementById('go');
+const drop = document.getElementById('drop');
+const options = document.querySelector('.options');
+const highlight = options.querySelector('.choice-highlight');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let highlightAnimation;
+function moveHighlight(animate = false) {
+  const card = options.querySelector('input:checked').closest('.option');
+  const group = options.getBoundingClientRect();
+  const target = card.getBoundingClientRect();
+  const previous = highlight.getBoundingClientRect();
+  const wasVisible = !highlight.hidden;
+  highlightAnimation?.cancel();
+  const x = target.left - group.left;
+  const y = target.top - group.top;
+  highlight.style.width = `${target.width}px`;
+  highlight.style.height = `${target.height}px`;
+  highlight.style.transform = `translate(${x}px, ${y}px)`;
+  highlight.hidden = false;
+  options.classList.add('has-highlight');
+  if (animate && wasVisible && !reducedMotion.matches && highlight.animate) {
+    const dx = x - (previous.left - group.left);
+    const dy = y - (previous.top - group.top);
+    highlightAnimation = highlight.animate([
+      { transform: `translate(${x - dx}px, ${y - dy}px)` },
+      { transform: `translate(${x + dx * .035}px, ${y + dy * .035}px) scale(1.025, .975)`, offset: .76 },
+      { transform: `translate(${x}px, ${y}px)` }
+    ], { duration: 400, easing: 'cubic-bezier(.22,.75,.26,1)' });
+  }
+}
+options.addEventListener('change', () => moveHighlight(true));
+reducedMotion.addEventListener('change', () => moveHighlight());
+new ResizeObserver(() => moveHighlight()).observe(options);
+moveHighlight();
+function updateSelection(){const files=Array.from(fileInput.files);selection.textContent=files.length ? `已选择 ${files.length} 个文件：${files.map(f=>f.name).join('、')}` : '尚未选择文件';}
+fileInput.addEventListener('change',updateSelection);
+for(const event of ['dragover','dragenter'])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.add('hover');});
+for(const event of ['dragleave','drop'])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.remove('hover');});
+drop.addEventListener('drop',e=>{if(e.dataTransfer.files.length){fileInput.files=e.dataTransfer.files;updateSelection();}});
+function download(blob, filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),120000);}
+function resultName(fileName,mode){const stem=fileName.replace(/\.pdf$/i,'');const suffix={portrait:'统一A4竖版',landscape:'统一A4横版',preserve:'统一A4保留方向'}[mode];return `${stem}_${suffix}.pdf`;}
+go.addEventListener('click', async ()=>{
+  const files=Array.from(fileInput.files);if(!files.length){status.className='status error';status.textContent='请先选择至少一个 PDF 文件。';return;}
+  if(files.length>30){status.className='status error';status.textContent='一次最多处理 30 个文件。';return;}
+  const mode=document.querySelector('input[name=mode]:checked').value;
+  const margin=document.getElementById('margin').value;
+  const data=new FormData();data.append('mode',mode);data.append('margin',margin);
+  files.forEach(file=>data.append('files',file,file.name));
+  if (location.protocol === 'file:') {
+    status.textContent = '这是界面预览。请双击启动 PDF 工具来导出文件。';
+    return;
+  }
+  go.disabled=true;go.textContent='正在处理...';status.className='status';status.textContent=`正在处理 ${files.length} 个 PDF，请保持本页打开。`;
+  try{
+    const response=await fetch('/convert',{method:'POST',headers:{'X-PDF-Tool-Token':TOKEN},body:data});
+    if(!response.ok){let message=await response.text();throw new Error(message||`服务器错误 ${response.status}`);}
+    const blob=await response.blob();
+    download(blob,files.length===1?resultName(files[0].name,mode):'PDF批量统一A4.zip');
+    status.className='status success';status.textContent=`处理完成！已触发下载（${files.length} 个文件）。请查看浏览器“下载”文件夹。`;
+  }catch(err){status.className='status error';status.textContent=`处理失败：${err.message}`;}
+  finally{go.disabled=false;go.textContent='开始处理并下载';}
+});
+</script></body></html>
